@@ -10,57 +10,94 @@
 - 展示：Streamlit
 
 ## 项目结构
-D:.
-|   .gitignore
-|   app.py
-|   directory_tree.txt
-|   README.md
-|   requirements-dev.txt
-|   requirements.txt
-|   
-+---.idea
-|   |   .gitignore
-|   |   JD-Keyword-Matcher-Handmade.iml
-|   |   misc.xml
-|   |   modules.xml
-|   |   vcs.xml
-|   |   workspace.xml
-|   |   
-|   \---inspectionProfiles
-|           profiles_settings.xml
-|           Project_Default.xml
-|           
-+---config
-|       settings.py
-|       
-+---core
-|       classifier.py
-|       matcher.py
-|       preprocessor.py
-|       __init__.py
-|       
-+---data
-|   +---processed
-|   |       .gitkeep
-|   |       
-|   \---raw
-|           .gitkeep
-|           
-+---models
-|       __init__.py
-|       
-+---spiders
-|       shixiseng.py
-|       __init__.py
-|       
-+---tests
-|       __init__.py
-|       
-\---utils
-        __init__.py
+```text
+JD-Keyword-Matcher-Handmade/
+├── config/                # 全局配置
+│   └── settings.py        # 路径、常量配置
+├── core/                 # 核心业务模块
+│   ├── __init__.py
+│   ├── clean.py           # 数据清洗/去重
+│   ├── label.py           # 岗位分类打标
+│   ├── matcher.py         # 关键词匹配
+│   └── preprocessor.py    # 文本预处理
+├── data/                 # 数据目录（Git忽略原始数据）
+│   ├── raw/               # 原始爬取数据（.gitkeep占位）
+│   ├── intermediate/      # 清洗后中间数据
+│   └── processed/         # 标注后最终数据
+├── models/               # 模型训练/保存
+│   └── __init__.py
+├── spiders/              # 爬虫模块
+│   ├── __init__.py
+│   ├── shixiseng.py       # 实习僧爬虫
+│   └── explore_shixiseng.py
+├── tests/                # 测试用例
+│   └── __init__.py
+├── utils/                # 工具函数
+│   └── __init__.py
+├── .gitignore            # Git忽略配置
+├── app.py                # Streamlit 前端入口
+├── requirements.txt      # 依赖清单
+└── README.md             # 项目说明
+```
 
 ## 快速开始
 ```bash
 pip install -r requirements.txt
 python spiders/boss_zhipin.py
 streamlit run app.py
+```
+
+## 关键设计决策
+
+### 1. 数据去重策略：标题重复≠岗位重复
+
+实习僧同一公司会发布多版本JD（如"Java后端（校招版）"和"Java后端（实习版）"），
+简单按 title+company 去重会误删有效数据。
+
+**解决方案**：引入描述前缀二次校验——title 和 company 均相同，但 job_description 
+前100字符不同 → 保留为独立样本。
+
+**效果**：去重前 4387 条 → 去重后 2922 条，其中 77 条为"标题重复但描述不同"的保留样本。
+
+---
+
+### 2. 类别合并策略：数据量驱动的动态合并
+
+监督学习模型要求每类训练样本 ≥ 30 条。根据实际分布，对数据不足的小类实施合并：
+
+| 原始类别 | 条数 | 合并去向 | 理由 |
+|---|---|---|---|
+| PHP后端开发 | 1 | → 其他后端开发 | 样本严重不足 |
+| 大数据开发工程师 | 3 | → 其他后端开发 | 样本严重不足，技术栈与后端重叠 |
+| Python后端开发 | 17 | → Python/Go后端开发 | 新兴语言后端，技术栈相近 |
+| Go后端开发 | 12 | → Python/Go后端开发 | 新兴语言后端，技术栈相近 |
+| 深度学习工程师 | 21 | → 深度学习/NLP工程师 | AI算法方向，神经网络技术栈重叠 |
+| NLP工程师 | 19 | → 深度学习/NLP工程师 | AI算法方向，PyTorch/Transformer技术栈重叠 |
+
+**合并后分布**：10 个训练类别，共 1797 条技术岗位数据，每类 29~654 条。
+
+---
+
+### 3. 双层分类架构：训练标签与展示标签解耦
+
+为解决"模型稳定性"与"展示精准度"的矛盾，采用双层设计：
+
+**训练层**（模型真实学习的类别，由数据量决定）：
+- 数据充足的大类 → **直接细分训练**（算法工程师、Java后端、计算机视觉等）
+- 数据不足的大类 → **统一训练**（前端开发、数据分析）
+
+**展示层**（用户看到的细分方向，由匹配结果推断）：
+- 直接细分类别 → 模型输出即展示
+- 统一训练类别 → 从 Top5 匹配岗位的 title 关键词统计推断细分方向
+
+**典型场景**：
+- 后端/AI 大类：模型直接输出"Java后端开发"或"计算机视觉工程师"
+- 前端开发大类：模型输出"前端开发"，匹配器在 115 条前端池中计算相似度，
+  从 Top5 匹配结果中统计"Vue"出现 3 次、"React"出现 2 次 → 展示为"Vue前端开发"
+
+## 面试场景
+| 场景 | 面试官问题 | 你的回答 |
+|------|------------|----------|
+| **技术面试** | 你们项目数据量不大，怎么处理类别不均衡？ | 我们采用了动态合并策略，对低于30条的类别实施技术栈相近合并，例如将数据量不足的大数据开发并入后端开发、数据挖掘并入数据分析，既解决了数据稀疏问题，又保证了模型训练的稳定性。 |
+| **产品面试** | 前端岗位为什么不直接细分Vue和React？ | 因为两者技术栈重叠度高，模型直接区分的效果不稳定。我们采用了「双层分类架构」：训练阶段统一为“前端开发”大类，保证模型效果；展示阶段再通过匹配池相似度排序，推断出具体的Vue/React细分标签，兼顾了模型稳定性和展示精准度。 |
+| **简历筛选** | HR 扫 README 看到「关键设计决策」章节 | 直接给面试官传递「这个学生具备工程思维，能根据数据特性做合理设计权衡」的信号，项目不是跑通就行，而是经过了完整的思考和优化。 |                          |

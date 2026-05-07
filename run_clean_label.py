@@ -29,7 +29,7 @@ def step_clean():
     print("="*50)
 
     # 查找最新的爬虫数据
-    files = sorted(RAW_DATA_DIR.glob("shixiseng_*.json"))
+    files = sorted(list(RAW_DATA_DIR.glob("shixiseng_*.json")))
     if not files:
         raise FileNotFoundError(f"未找到爬虫数据文件，请检查 {RAW_DATA_DIR} 目录")
 

@@ -3,34 +3,27 @@
 jieba分词 + 停用词过滤
 """
 import jieba
-from config.settings import DATA_DIR,MODEL_DIR,PROCESSED_DATA_DIR
+from config.settings import DATA_DIR,MODEL_DIR,PROCESSED_DATA_DIR,INTERMEDIATE_DATA_DIR
 from sklearn.feature_extraction.text import TfidfVectorizer
 import pickle
 import json
+from utils.decorators import load_words_from
 
-def load_stopwords():
+@load_words_from("stopwords.txt")
+def load_stopwords(stopwords: list[str]) -> list[str]:
     """
     加载停用词表
     """
-    stopwords_file = DATA_DIR / "stopwords.txt" # 停用词表路径
 
-    stopwords = []
-    with open(stopwords_file, 'r', encoding='utf-8') as f:
-        for line in f:
-            stopwords.append(line.strip())
     return stopwords
 
-def load_custom_words():
+@load_words_from("customwords.txt")
+def load_customwords(customwords: list[str]) -> list[str]:
     """
     加载自定义词表
     """
-    customwords_file = DATA_DIR / "customwords.txt" # 自定义词表路径
 
-    custom_words = []
-    with open(customwords_file, 'r', encoding='utf-8') as f:
-        for line in f:
-            custom_words.append(line.strip())
-    return custom_words
+    return customwords
 
 def tokenize(text: str,stopwords:list) -> str:
     """
@@ -49,18 +42,28 @@ def tokenize(text: str,stopwords:list) -> str:
 
     return " ".join(filtered_tokens)
 
-def preprocess(jobs):
+def preprocess():
     """
     文本预处理：分词 + 过滤停用词
     输入：job_labeled.json
     输出：jobs_preprocessed.json + tfidf_vectorizer.pkl
     """
-    from pathlib import Path
-    from config.settings import DATA_DIR,MODEL_DIR,PROCESSED_DATA_DIR
+
+    # 查找最新的标注数据
+    file = sorted(list(INTERMEDIATE_DATA_DIR.glob("shixiseng_*_cleaned_labeled.json")))
+    if not file:
+        raise FileNotFoundError(f"未找到标注数据文件，请检查 {INTERMEDIATE_DATA_DIR} 目录")
+
+    latest_data_path = file[-1]
+    print(f"加载数据: {latest_data_path}")
+
+    # 加载数据
+    with open(latest_data_path, "r", encoding="utf-8") as f:
+        jobs = json.load(f)
 
     stopwords = load_stopwords()  # 加载停用词表
-    custom_words = load_custom_words()  # 加载自定义词表
-    for word in custom_words:
+    customwords = load_customwords()  # 加载自定义词表
+    for word in customwords:
         jieba.add_word(word)
 
     # 提取文本，分词 + 过滤停用词
@@ -83,14 +86,17 @@ def preprocess(jobs):
     tfidf_matrix = vectorizer.fit_transform(texts)
     print(f"TF-IDF向量化完成，共{tfidf_matrix.shape[0]}条数据，{tfidf_matrix.shape[1]}个特征")
 
+    stem = latest_data_path.stem
+    base_name = stem.rsplit("_",2)[0]
+
     # 保存向量化结果
-    tfidf_path = PROCESSED_DATA_DIR / "jobs_processed.json"
+    tfidf_path = PROCESSED_DATA_DIR / f"{base_name}_processed.json"
     with open(tfidf_path, "w",encoding="utf-8") as f:
         json.dump(jobs, f, ensure_ascii=False, indent=2)
     print(f"已保存TF-IDF向量化结果到 {tfidf_path}")
 
     # 保存向量化器
-    vectorizer_path = MODEL_DIR / "tfidf_vectorizer.pkl"
+    vectorizer_path = MODEL_DIR / f"{base_name}_tfidf_vectorizer.pkl"
     with open(vectorizer_path, "wb") as f:  # "wb"保存的是二进制文件，“w"保存的是文本文件
         pickle.dump(vectorizer, f)
     print(f"已保存TF-IDF向量化器到 {vectorizer_path}")
@@ -101,18 +107,4 @@ def preprocess(jobs):
 
 
 if __name__ == "__main__":
-    import json
-    from config.settings import INTERMEDIATE_DATA_DIR
-
-    # 查找最新的标注数据
-    file =sorted(list(INTERMEDIATE_DATA_DIR.glob("shixiseng_*_cleaned_labeled.json")))
-    if not file:
-        raise FileNotFoundError(f"未找到标注数据文件，请检查 {INTERMEDIATE_DATA_DIR} 目录")
-
-    latest_data_path = file[-1]
-    print(f"加载数据: {latest_data_path}")
-
-    # 加载数据
-    with open(latest_data_path, "r", encoding="utf-8") as f:
-        jobs = json.load(f)
-    preprocess(jobs)
+    preprocess()

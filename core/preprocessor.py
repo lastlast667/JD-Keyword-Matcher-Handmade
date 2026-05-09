@@ -45,6 +45,7 @@ def tokenize(text: str,stopwords:list) -> str:
 def preprocess():
     """
     文本预处理：分词 + 过滤停用词
+    TF-IDF向量化
     输入：job_labeled.json
     输出：jobs_preprocessed.json + tfidf_vectorizer.pkl
     """
@@ -101,7 +102,8 @@ def preprocess():
         pickle.dump(vectorizer, f)
     print(f"已保存TF-IDF向量化器到 {vectorizer_path}")
 
-    return jobs, vectorizer
+    # 返回处理后的数据，向量化器，向量化矩阵
+    return jobs, vectorizer, tfidf_matrix
 
 
 

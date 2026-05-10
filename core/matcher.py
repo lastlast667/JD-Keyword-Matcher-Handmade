@@ -163,7 +163,6 @@ def vectorize_resume(text: str, vectorizer) -> list[float]:
     Returns:
         vec: sparse matrix (1, n_features) —— 单条样本也是二维矩阵
     """
-    # TODO：text → tokenize → " ".join(words) → vectorizer.transform()
 
     # 加载停用词表
     stopwords = load_stopwords()
@@ -176,7 +175,7 @@ def vectorize_resume(text: str, vectorizer) -> list[float]:
     return resume_vec
 
 # ================== step 4:预测简历大类 ==================
-def predict_category(resume_vec, classifier, encoder) -> str:
+def predict_category(resume_vec, classifier, encoder):
     """
     预测简历所属的大类
 
@@ -185,9 +184,6 @@ def predict_category(resume_vec, classifier, encoder) -> str:
         label_id: 整数标签
         probs: 各类别概率数组（用于调试或展示置信度）
     """
-    # TODO：classifier.predict(resume_vec) → label_id
-    # TODO：classifier.predict_proba(resume_vec) → probs
-    # TODO：encoder.inverse_transform([label_id]) → label_str
 
     label_id = classifier.predict(resume_vec)
     label_str = encoder.inverse_transform([label_id])
@@ -259,9 +255,6 @@ def match_in_category_pool(resume_vec, processed_data, tfidf_vectorizer, target_
     - similarity 值域是 [-1, 1]，TF-IDF 非负所以实际是 [0, 1]。
       但值通常不会很高（0.1~0.3 就算很相似了），这个要在展示层跟用户说明。
     """
-    # TODO：计算 resume_vec 和每个 JD 的 cosine similarity
-    # TODO：按 similarity 从高到低排序，取前 top_k 条
-    # TODO：返回每条的 JD 信息和 similarity 分数
 
     # 筛选出目标大类的 JD 池
     target_pool = [data for data in processed_data if data['category'] == target_label]
@@ -312,9 +305,6 @@ def find_matches(resume_path, top_k=10,multi_pool=False):
     Returns:
         list[dict]: Top-K 匹配的 JD
     """
-    # TODO：串联整个流程
-    #   load_artifacts() → extract_resume_text() → vectorize_resume()
-    #   → predict_category() → match_in_pool() / match_multi_pool()
 
     # step 1:加载模型和数据
     vectorizer, classifier, encoder, processed_data = load_artifacts()
@@ -347,7 +337,6 @@ def main():
     print("简历-JD 匹配测试")
     print("=" * 50)
 
-    # TODO：初始化并测试
     results = find_matches(test_resume, top_k=5)
     if not results:
         print("❌ 没有找到匹配的岗位")

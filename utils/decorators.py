@@ -3,7 +3,7 @@ from config.settings import DATA_DIR
 from functools import lru_cache
 
 @lru_cache(maxsize=None)    # 缓存装饰器
-def load_words_from(filename: str) -> list[str]:
+def load_words_from(filename: str):
     """
     加载词表装饰器：
     加载停用词表和自定义词表
@@ -21,5 +21,3 @@ def load_words_from(filename: str) -> list[str]:
             return func(words, *args, **kwargs)
         return wrapper
     return decorator
-
-

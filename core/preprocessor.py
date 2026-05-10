@@ -96,7 +96,7 @@ def preprocess():
         json.dump(jobs, f, ensure_ascii=False, indent=2)
     print(f"已保存TF-IDF向量化结果到 {tfidf_path}")
 
-    # 保存向量化器
+    # 保存向量化器，即文本特征提取器
     vectorizer_path = MODEL_DIR / f"{base_name}_tfidf_vectorizer.pkl"
     with open(vectorizer_path, "wb") as f:  # "wb"保存的是二进制文件，“w"保存的是文本文件
         pickle.dump(vectorizer, f)

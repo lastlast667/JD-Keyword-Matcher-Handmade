@@ -117,7 +117,7 @@ def compare_models(X_train: list[str], y_train: list[str]) -> tuple:
         "LogisticRegression": LogisticRegression(
             max_iter=1000,                  # 最大迭代次数
             solver="lbfgs",                 # 优化算法
-            C=0.3,                          # 正则化系数的导数，默认 1.0，小于1容易欠拟合，大于1容易过拟合
+            C=0.5,                          # 正则化系数的导数，默认 1.0，小于1容易欠拟合，大于1容易过拟合
             # 新版本multi_class默认值是auto，会根据y的类型自动选择
             # multi_class="multinomial",    # 多分类
             random_state=42,                # 随机种子

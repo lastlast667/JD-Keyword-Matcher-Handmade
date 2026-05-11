@@ -62,6 +62,11 @@ def preprocess():
     with open(latest_data_path, "r", encoding="utf-8") as f:
         jobs = json.load(f)
 
+    # ===== 新增：过滤掉"过滤"类别，不参与模型训练 =====
+    jobs = [j for j in jobs if j.get("category") != "过滤"]
+    print(f"已过滤'过滤'类别，剩余{len(jobs)}条技术岗数据")
+    # ================================================
+
     stopwords = load_stopwords()  # 加载停用词表
     customwords = load_customwords()  # 加载自定义词表
     for word in customwords:

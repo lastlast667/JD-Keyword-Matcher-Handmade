@@ -188,8 +188,10 @@ if match_button and resume_text and model_ready:
                 col1, col2 = st.columns([3, 1])
 
                 with col1:
-                    # 岗位标题（带序号）
-                    st.subheader(f"{i}. {match.get('title', '未知岗位')}")
+                    # 岗位标题（带序号和链接）
+                    title = match.get('title', '未知岗位')
+                    job_url = match.get('url', '')
+                    st.markdown(f"## {i}. [{title} 🔗]({job_url})")
                     # 公司和子类信息（小字灰色）
                     st.caption(f"💼 {match.get('company', '未知公司')} | 📂 {match.get('sub_category', '')}")
 

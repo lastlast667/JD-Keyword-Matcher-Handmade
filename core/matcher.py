@@ -281,7 +281,8 @@ def match_in_category_pool(resume_vec, processed_data, tfidf_vectorizer, target_
             "sub_category": data['sub_category'],       # 存储JD所属小类
             "company": data['company'],                 # 存储JD所属公司
             "title": data['title'],                     # 存储JD标题
-            "academic":data['academic']                 # 存储JD所属学历
+            "academic":data['academic'],                # 存储JD所属学历
+            "url":data['url']                           # 存储JD链接
         }
 
         matches.append(result)

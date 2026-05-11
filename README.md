@@ -16,6 +16,7 @@ JD-Keyword-Matcher-Handmade/
 │   └── settings.py        # 路径、常量配置
 ├── core/                 # 核心业务模块
 │   ├── __init__.py
+│   ├── classifier.py      # 岗位分类模型训练
 │   ├── clean.py           # 数据清洗/去重
 │   ├── label.py           # 岗位分类打标
 │   ├── matcher.py         # 关键词匹配
@@ -25,6 +26,9 @@ JD-Keyword-Matcher-Handmade/
 │   ├── intermediate/      # 清洗后中间数据
 │   └── processed/         # 标注后最终数据
 ├── models/               # 模型训练/保存
+│   ├── shixiseng_*_best_model.pkl
+│   ├── shixiseng_*_label_encoder.pkl
+│   ├── shixiseng_*_tfidf_vectorizer.pkl
 │   └── __init__.py
 ├── spiders/              # 爬虫模块
 │   ├── __init__.py
@@ -33,10 +37,13 @@ JD-Keyword-Matcher-Handmade/
 ├── tests/                # 测试用例
 │   └── __init__.py
 ├── utils/                # 工具函数
-│   └── __init__.py
+│   ├── __init__.py
+│   └── extract_text.py   # 提取文件文本
 ├── .gitignore            # Git忽略配置
 ├── app.py                # Streamlit 前端入口
-├── requirements.txt      # 依赖清单
+├── run_clean_label.py    # 爬虫数据清洗 + 标注
+├── requirements.txt      # 生产依赖清单
+├── requirements-dev.txt  # 开发依赖清单
 └── README.md             # 项目说明
 ```
 

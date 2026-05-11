@@ -147,6 +147,7 @@ def extract_detail(page, detail_url:str, keyword:str) -> dict | None:
             "practice_period": practice_period,
             "content": content,
             "keyword": keyword, # 关键词用于后续分类标注
+            "url": detail_url,  # 详情页链接，用于展示时跳转
         }
 
     except Exception as e:
